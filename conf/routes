@@ -1,0 +1,10 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET     /                           controllers.Application.wildCardFunction
+POST    /                           controllers.Application.wildCardFunction
+PUT     /                           controllers.Application.wildCardFunction
+
+# Map static resources from the /public folder to the /assets URL path

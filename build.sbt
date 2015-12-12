@@ -10,8 +10,7 @@ libraryDependencies ++= Seq(
   jdbc,
   cache,
   ws,
-  specs2 % Test,
-  "net.databinder.dispatch" %% "dispatch-core" % "0.11.2"
+  specs2 % Test
 )
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"

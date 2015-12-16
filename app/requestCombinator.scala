@@ -4,6 +4,7 @@ import play.api.libs.ws._
 import scala.concurrent._
 import scala.concurrent.duration._
 import ExecutionContext.Implicits.global
+import play.api.Logger
 
 package object weirdCombinators {
 
@@ -16,28 +17,31 @@ package object weirdCombinators {
       case _ => None
     }}
 
-  implicit class addHeader(x:Option[WSRequest]){
+  implicit class combinators(x:Option[WSRequest]){
     // yay functors with map
-    def <*> (y:(String,String)) :Option[WSRequest] = x.map {req => req.withHeaders(y)}
-  }
+    def <*> (y:(String,String)) :Option[WSRequest] = x map {req => req.withHeaders(y)}
 
-  implicit class addMethodAndExec(x:Option[WSRequest]){
     // the option is probably useless , needs checking for appropriate method
-    def <||> (y:String):Option[Future[WSResponse]] = x.map {req => req.execute(y)}
+    def <||> (y:String):Option[WSRequest] = x map { _.withMethod(y) }
+
   }
 
-
-  implicit class ripOutStatus(x:Option[Future[WSResponse]] ){
-    def </\>(y:String):Any = {
+  implicit class executeAndRipOutStatus(x:Option[WSRequest]){
+    def </~\>(y:String):Any = {
       // damn this thing is ugly
+      val nestedMethod: String = x map {_.method} get
+      val wrappedResponse:Option[Future[WSResponse]] = x map {req => req.execute(nestedMethod)}
+ 
       val result = y match {
-        case "status" => x.map { _.onSuccess { case response => response.status}}
-        case "statusText" => x.map { _.onSuccess { case response => response.statusText}}
-        case "body" => x.map { _.onSuccess { case response => response.body}}
+        case "status" => wrappedResponse.map { _.onSuccess { case response => response.status}}
+        case "statusText" => wrappedResponse.map { _.onSuccess { case response => response.statusText}}
+        case "body" => wrappedResponse.map { _.onSuccess { case response => response.body}}
         case _     => "method doesn't exist"
       }
-      Await.result(x.get,20.seconds) 
+      Await.result(wrappedResponse.get,20.seconds) 
       return result
+     
+     wrappedResponse map {_.onSuccess {case response => response}}
     }
   }
 

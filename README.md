@@ -12,9 +12,19 @@ Includes a luke-modified-combinator(somewhat) library to simplify operations on 
 ```
 >>> import weirdCombinators._
 
->>> val url:String = 'http://localhost:9000' 
+>>> val url:String = "http://localhost:9000" 
 
->>> liftez(url) <*> ("egg","chicken") <||> "GET" </\> "status"
+>>> liftez(url) <*> ("egg","chicken") <||> "GET" </~\> "status"
+```
+It should be noted that either of the following should work
+
+```
+>>> liftez(url) <*> ("egg","chicken") <||> "GET" </~\> "status"
+
+>>> liftez(url) <||> GET <*> ("egg","chicken") <*> ("smash","bros") </~\> "status"
+
+>>> liftez(url) <*> ("egg","chicken") <||> "GET" <*>("smash","bros") </~\> "status"
+
 ```
 
 ### Important

@@ -9,6 +9,7 @@ import play.api.Logger
 package object weirdCombinators {
 
   implicit val client = NingWSClient()
+  private var methodString = "GET"
 
   def liftez(x:String):Option[WSRequest] = {
     val matcher = """^http(s){0,1}://.+""".r
@@ -18,36 +19,31 @@ package object weirdCombinators {
     }}
 
   implicit class combinators(x:Option[WSRequest]){
-    // yay functors with map
+
     def <*> (y:(String,String)) :Option[WSRequest] = x map {req => req.withHeaders(y)}
 
     // the option is probably useless , needs checking for appropriate method
-    def <||> (y:String):Option[WSRequest] = x map { _.withMethod(y) }
+    def <||> (y:String):Option[WSRequest] = {
+      methodString = y 
+      return x 
+    }
 
     def <**>():WSResponse = {
-      val nestedMethod: String = x map {_.method} get
-      val wrappedResponse:Option[Future[WSResponse]] = x map {req => req.execute(nestedMethod)}
- 
-
-     val result =  Await.result(wrappedResponse.get, 10.seconds)
-     return result
-     } 
+     return (Await.result(_:Future[WSResponse], 10.seconds))(
+       x map {_.execute(methodString)} get
+     )
+   } 
   }
 
   implicit class executeAndRipOutStatus(x:Option[WSRequest]){
     def </~\>(y:String):Any = {
       // damn this thing is ugly
-      val nestedMethod: String = x map {_.method} get
-      val wrappedResponse:Option[Future[WSResponse]] = x map {req => req.execute(nestedMethod)}
- 
-
-     val result =  Await.result(wrappedResponse.get, 10.seconds)
+      val result =  x <**>
 
       return {y match {
         case "status" => result.status
         case "statusText" => result.statusText
         case _ => "method not defined"
-      
       }}
      
     }

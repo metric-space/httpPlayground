@@ -24,6 +24,14 @@ package object weirdCombinators {
     // the option is probably useless , needs checking for appropriate method
     def <||> (y:String):Option[WSRequest] = x map { _.withMethod(y) }
 
+    def <**>():WSResponse = {
+      val nestedMethod: String = x map {_.method} get
+      val wrappedResponse:Option[Future[WSResponse]] = x map {req => req.execute(nestedMethod)}
+ 
+
+     val result =  Await.result(wrappedResponse.get, 10.seconds)
+     return result
+     } 
   }
 
   implicit class executeAndRipOutStatus(x:Option[WSRequest]){
@@ -32,16 +40,16 @@ package object weirdCombinators {
       val nestedMethod: String = x map {_.method} get
       val wrappedResponse:Option[Future[WSResponse]] = x map {req => req.execute(nestedMethod)}
  
-      val result = y match {
-        case "status" => wrappedResponse.map { _.onSuccess { case response => response.status}}
-        case "statusText" => wrappedResponse.map { _.onSuccess { case response => response.statusText}}
-        case "body" => wrappedResponse.map { _.onSuccess { case response => response.body}}
-        case _     => "method doesn't exist"
-      }
-      Await.result(wrappedResponse.get,20.seconds) 
-      return result
+
+     val result =  Await.result(wrappedResponse.get, 10.seconds)
+
+      return {y match {
+        case "status" => result.status
+        case "statusText" => result.statusText
+        case _ => "method not defined"
+      
+      }}
      
-     wrappedResponse map {_.onSuccess {case response => response}}
     }
   }
 

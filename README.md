@@ -14,15 +14,23 @@ Includes a luke-modified-combinator(somewhat) library to simplify operations on 
 
 >>> val url:String = "http://localhost:9000" 
 
->>> liftez(url) <*> ("egg","chicken") <||> "GET" </~\> "status"
+>>> val response = liftez(url) <*> ("egg","chicken") <||> "GET" <**> "status"
+
+>>> println(response.statusText)
 ```
 It should be noted that either of the following should work
 
 ```
->>> liftez(url) <*> ("egg","chicken") <||> "GET" </~\> "status"
+>>> liftez(url) <*> ("egg","chicken") <||> "GET" <**> 
 
->>> liftez(url) <||> GET <*> ("egg","chicken") <*> ("smash","bros") </~\> "status"
+>>> liftez(url) <||> GET <*> ("egg","chicken") <*> ("smash","bros") <**>"
 
+>>> liftez(url) <*> ("egg","chicken") <||> "GET" <*>("smash","bros") <**>
+
+```
+If you want even to extract a certain response field in the same expression without saving the response object, you could go
+
+```
 >>> liftez(url) <*> ("egg","chicken") <||> "GET" <*>("smash","bros") </~\> "status"
 
 ```
